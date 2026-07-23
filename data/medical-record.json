@@ -1,0 +1,97 @@
+{
+    "patient_id": "DK-20450912-SL",
+    "full_name": "Sarah Elisabeth Lindqvist",
+    "date_of_birth": "1992-09-12",
+    "sex": "Female",
+    "civil_registration_number": "120992-1847",
+    "blood_type": "A+",
+    "allergies": [
+        "Penicillin (anaphylaxis, confirmed 2008)",
+        "Latex (contact dermatitis)"
+    ],
+    "current_medications": [
+        {
+            "name": "Sertraline",
+            "dose": "50 mg",
+            "frequency": "Once daily",
+            "since": "2020-03-01"
+        },
+        {
+            "name": "Cetirizine",
+            "dose": "10 mg",
+            "frequency": "As needed (seasonal)",
+            "since": "2015-05-01"
+        }
+    ],
+    "chronic_conditions": [
+        "Generalised anxiety disorder (ICD-10: F41.1)",
+        "Seasonal allergic rhinitis"
+    ],
+    "surgical_history": [
+        {
+            "procedure": "Appendectomy",
+            "date": "2009-07-14",
+            "hospital": "Aarhus Universitetshospital",
+            "notes": "Uncomplicated laparoscopic procedure"
+        }
+    ],
+    "recent_visits": [
+        {
+            "date": "2024-03-18",
+            "type": "Specialist \u2014 Allergy clinic",
+            "provider": "Dr. Lars Bjerrum, Rigshospitalet",
+            "reason": "Annual allergy review",
+            "notes": "Skin prick test confirmed dust mite sensitisation. Recommended HEPA filter. No immunotherapy indicated at this time.",
+            "weight_kg": 63.5,
+            "height_cm": 171
+        }
+    ],
+    "vaccination_history": [
+        {
+            "vaccine": "COVID-19 (Pfizer BNT162b2)",
+            "dates": [
+                "2021-04-10",
+                "2021-05-08",
+                "2022-01-15"
+            ]
+        },
+        {
+            "vaccine": "Influenza",
+            "dates": [
+                "2023-10-20",
+                "2024-10-19"
+            ]
+        },
+        {
+            "vaccine": "HPV (Gardasil 9)",
+            "dates": [
+                "2007-09-01",
+                "2007-11-01",
+                "2008-03-01"
+            ]
+        },
+        {
+            "vaccine": "MMR",
+            "dates": [
+                "1993-04-15",
+                "1994-09-20"
+            ]
+        }
+    ],
+    "family_history": {
+        "mother": "Type 2 diabetes (diagnosed age 58), hypertension",
+        "father": "Myocardial infarction (age 61, survived), hypercholesterolaemia",
+        "siblings": "One brother, no known conditions"
+    },
+    "emergency_contact": {
+        "name": "Thomas Lindqvist",
+        "relation": "Brother",
+        "phone": "+45 4099 2231"
+    },
+    "gp": {
+        "name": "Dr. Mette Holm",
+        "clinic": "L\u00e6gerne N\u00f8rreport",
+        "address": "N\u00f8rreport 12, 8000 Aarhus C",
+        "phone": "+45 8612 4400"
+    }
+}

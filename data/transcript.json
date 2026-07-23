@@ -1,0 +1,290 @@
+{
+    "recording_id": "REC-20241103-0914-LGN",
+    "transcription_confidence": 0.78,
+    "date": "2024-11-03",
+    "location": "Lægerne Nørreport, Aarhus",
+    "speakers_detected": 2,
+    "duration_seconds": 1043,
+    "segments": [
+        {
+            "t": "00:00:08",
+            "speaker": "DR_HOLM",
+            "text": "Good morning Sarah, come in and have a seat. Yes, sorry for the mess, it's a Monday."
+        },
+        {
+            "t": "00:00:15",
+            "speaker": "PATIENT",
+            "text": "Haha yes that's fine, it's fine."
+        },
+        {
+            "t": "00:00:19",
+            "speaker": "DR_HOLM",
+            "text": "Okay so we have a six month follow-up on your sertraline. Let me just open your chart here for a moment."
+        },
+        {
+            "t": "00:00:28",
+            "speaker": "DR_HOLM",
+            "text": "Okay it looks like last time was in March, is that correct?"
+        },
+        {
+            "t": "00:00:32",
+            "speaker": "PATIENT",
+            "text": "Yes that's right."
+        },
+        {
+            "t": "00:00:35",
+            "speaker": "DR_HOLM",
+            "text": "Good. And how have things been generally since then, mood-wise?"
+        },
+        {
+            "t": "00:00:42",
+            "speaker": "PATIENT",
+            "text": "Hmm, I'd say it's been quite stable. There was a difficult period in August when I was struggling, but it resolved on its own. I think it was mostly work stress."
+        },
+        {
+            "t": "00:00:56",
+            "speaker": "DR_HOLM",
+            "text": "Okay, work stress. What was happening at work?"
+        },
+        {
+            "t": "00:01:02",
+            "speaker": "PATIENT",
+            "text": "We had a big deadline and I was the project lead. It was very intense, but it's over now."
+        },
+        {
+            "t": "00:01:11",
+            "speaker": "DR_HOLM",
+            "text": "And sleep?"
+        },
+        {
+            "t": "00:01:14",
+            "speaker": "PATIENT",
+            "text": "Sleep is okay, seven to eight hours mostly. I don't wake up at night anymore like I used to, that's better."
+        },
+        {
+            "t": "00:01:23",
+            "speaker": "DR_HOLM",
+            "text": "That sounds good. And you're still taking sertraline fifty milligrams in the morning?"
+        },
+        {
+            "t": "00:01:29",
+            "speaker": "PATIENT",
+            "text": "Yes, always in the morning with food."
+        },
+        {
+            "t": "00:01:32",
+            "speaker": "DR_HOLM",
+            "text": "Perfect. Any side effects you want to mention? Nausea or..."
+        },
+        {
+            "t": "00:01:39",
+            "speaker": "PATIENT",
+            "text": "No, not really. Maybe a bit of dry mouth now and then, but nothing that bothers me."
+        },
+        {
+            "t": "00:01:46",
+            "speaker": "DR_HOLM",
+            "text": "That's completely normal with sertraline. It's nothing we need to do anything about."
+        },
+        {
+            "t": "00:01:52",
+            "speaker": "PATIENT",
+            "text": "Okay, fine."
+        },
+        {
+            "t": "00:01:54",
+            "speaker": "DR_HOLM",
+            "text": "Let me take your blood pressure quickly."
+        },
+        {
+            "t": "00:02:10",
+            "speaker": "DR_HOLM",
+            "text": "Okay, one hundred eighteen over seventy-four. That's excellent Sarah."
+        },
+        {
+            "t": "00:02:16",
+            "speaker": "PATIENT",
+            "text": "Oh good!"
+        },
+        {
+            "t": "00:02:18",
+            "speaker": "DR_HOLM",
+            "text": "Yes, very good. And your weight, we weighed you last in March. Do you remember what you weighed?"
+        },
+        {
+            "t": "00:02:26",
+            "speaker": "PATIENT",
+            "text": "Hmm, I think it was sixty-three point five kilos or thereabouts."
+        },
+        {
+            "t": "00:02:31",
+            "speaker": "DR_HOLM",
+            "text": "Yes, sixty-three point five kilos, and now you're... hmm, sixty-eight kilos actually."
+        },
+        {
+            "t": "00:02:39",
+            "speaker": "PATIENT",
+            "text": "Oh really? I've been running quite a bit actually."
+        },
+        {
+            "t": "00:02:42",
+            "speaker": "DR_HOLM",
+            "text": "Interesting. Now I need to ask you about allergies because we need to update the chart. You have a penicillin allergy, correct?"
+        },
+        {
+            "t": "00:02:52",
+            "speaker": "PATIENT",
+            "text": "Yes, I've had that since I was a teenager. It was quite severe—I got anaphylaxis, my throat swelled up, the whole thing."
+        },
+        {
+            "t": "00:03:02",
+            "speaker": "DR_HOLM",
+            "text": "Okay, so that's a confirmed anaphylactic reaction. It's important we always have that in the chart."
+        },
+        {
+            "t": "00:03:09",
+            "speaker": "PATIENT",
+            "text": "Of course."
+        },
+        {
+            "t": "00:03:11",
+            "speaker": "DR_HOLM",
+            "text": "And latex, you mentioned that last time."
+        },
+        {
+            "t": "00:03:14",
+            "speaker": "PATIENT",
+            "text": "Yes, latex too. That's mostly contact eczema, nothing serious but it's uncomfortable."
+        },
+        {
+            "t": "00:03:21",
+            "speaker": "DR_HOLM",
+            "text": "Yes, we use nitrile gloves here so that's fine. Now, your mother has Type 2 diabetes, correct?"
+        },
+        {
+            "t": "00:03:31",
+            "speaker": "PATIENT",
+            "text": "Yes, she was diagnosed when she was fifty-eight. And my father... well, he had a heart attack. He survived thankfully, but he was only forty-five at the time."
+        },
+        {
+            "t": "00:03:45",
+            "speaker": "DR_HOLM",
+            "text": "That's concerning given your family history. We should monitor your cholesterol and blood sugar. Let's do a blood test next time."
+        },
+        {
+            "t": "00:03:55",
+            "speaker": "PATIENT",
+            "text": "That sounds reasonable."
+        },
+        {
+            "t": "00:03:57",
+            "speaker": "DR_HOLM",
+            "text": "And your emergency contact—is it still your brother Thomas?"
+        },
+        {
+            "t": "00:04:03",
+            "speaker": "PATIENT",
+            "text": "Yes, Thomas Lindqvist. His number is forty 4099 2231."
+        },
+        {
+            "t": "00:04:11",
+            "speaker": "DR_HOLM",
+            "text": "Forty 4099 2231, okay I have that."
+        },
+        {
+            "t": "00:04:17",
+            "speaker": "PATIENT",
+            "text": "Yes."
+        },
+        {
+            "t": "00:04:19",
+            "speaker": "DR_HOLM",
+            "text": "And the cetirizine for seasonal allergies, are you still taking that?"
+        },
+        {
+            "t": "00:04:24",
+            "speaker": "PATIENT",
+            "text": "Yes, but I take it year-round now, not just spring and summer like before. Actually I'm taking it twice a day."
+        },
+        {
+            "t": "00:04:30",
+            "speaker": "DR_HOLM",
+            "text": "Hmm, okay. That's an as-needed medication, so ideally it should be seasonal. Why the change?"
+        },
+        {
+            "t": "00:04:38",
+            "speaker": "PATIENT",
+            "text": "I just felt like my allergies were worse this year. But actually I've also started taking ibuprofen daily for inflammation, is that okay?"
+        },
+        {
+            "t": "00:04:48",
+            "speaker": "DR_HOLM",
+            "text": "Daily ibuprofen? How much and for how long?"
+        },
+        {
+            "t": "00:04:52",
+            "speaker": "PATIENT",
+            "text": "Four hundred milligrams every morning, been doing it for about two months now. My knees have been bothering me from running."
+        },
+        {
+            "t": "00:05:01",
+            "speaker": "DR_HOLM",
+            "text": "Okay, that's new and not something in your chart. We should discuss this more. Is there anything else you want to talk about today?"
+        },
+        {
+            "t": "00:05:10",
+            "speaker": "PATIENT",
+            "text": "Actually yes, I recently changed jobs. I'm now an engineer at Lama Bank in Copenhagen."
+        },
+        {
+            "t": "00:05:18",
+            "speaker": "DR_HOLM",
+            "text": "Oh, how exciting."
+        },
+        {
+            "t": "00:05:20",
+            "speaker": "PATIENT",
+            "text": "Yes, it's much more interesting work, and I'm not commuting as much. Actually, I moved to Copenhagen three months ago."
+        },
+        {
+            "t": "00:05:28",
+            "speaker": "DR_HOLM",
+            "text": "Oh, so you won't be my patient for much longer."
+        },
+        {
+            "t": "00:05:32",
+            "speaker": "PATIENT",
+            "text": "No, I need to find a new doctor in Copenhagen, but I wanted to have this follow-up with you since I know you."
+        },
+        {
+            "t": "00:05:40",
+            "speaker": "DR_HOLM",
+            "text": "Of course, that's completely fine. I'll write a summary letter for your new doctor. Should we say six months again or would you like a shorter interval?"
+        },
+        {
+            "t": "00:05:50",
+            "speaker": "PATIENT",
+            "text": "Six months is fine, I'm doing well."
+        },
+        {
+            "t": "00:05:54",
+            "speaker": "DR_HOLM",
+            "text": "Perfect. So we continue with sertraline fifty milligrams, no dose change. And you or rather your new doctor will see you in six months."
+        },
+        {
+            "t": "00:06:04",
+            "speaker": "PATIENT",
+            "text": "Thank you, Doctor Holm."
+        },
+        {
+            "t": "00:06:07",
+            "speaker": "DR_HOLM",
+            "text": "You're welcome, Sarah. Take care of yourself. Goodbye."
+        },
+        {
+            "t": "00:06:10",
+            "speaker": "PATIENT",
+            "text": "Goodbye."
+        }
+    ]
+}
