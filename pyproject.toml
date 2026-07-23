@@ -13,4 +13,6 @@ dependencies = [
     "pytest>=9.1.1",
     "ruff>=0.15.22",
     "tqdm>=4.69.0",
+    "types-pyyaml>=6.0.12.20260518",
+    "types-tqdm>=4.69.0.20260720",
 ]
