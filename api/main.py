@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from agents import set_trace_processors
 from fastapi import FastAPI
 import dotenv
