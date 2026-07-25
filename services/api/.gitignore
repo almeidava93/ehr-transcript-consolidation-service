@@ -8,3 +8,4 @@ __pycache__
 db/*.db
 db/*.db-*
 output/*.jsonl
+*.egg-info

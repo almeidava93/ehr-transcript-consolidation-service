@@ -1,5 +1,5 @@
 [project]
-name = "ehr-transcript-consolidation-service"
+name = "api"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -9,6 +9,7 @@ dependencies = [
     "fastapi[standard]>=0.139.2",
     "jsonlines>=4.0.0",
     "openai-agents>=0.18.3",
+    "toml>=0.10.2",
     "tqdm>=4.69.0",
     "uvicorn>=0.51.0",
 ]
@@ -22,4 +23,13 @@ dev = [
     "ruff>=0.15.22",
     "ipykernel>=7.3.0",
     "ipywidgets>=8.1.8",
+    "api",
 ]
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "api"
+module-root = ""
