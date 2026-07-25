@@ -1,6 +1,8 @@
 # Relevant paths
 from pathlib import Path
 
+VERSION = "0.1.0"
+TITLE = "EHR and transcript validation service"
 
 BASE_PATH = Path(__file__).parent
 LOCAL_DATABASE_PATH = BASE_PATH.parent / "db"
