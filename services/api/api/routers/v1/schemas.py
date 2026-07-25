@@ -1,5 +1,4 @@
 from enum import StrEnum
-
 from agents import ModelSettings
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -17,6 +16,7 @@ class TranscriptChunk(BaseModel):
 
 
 class PredictionRequest(BaseModel):
+    session_id: str | None = Field(default=None)
     ehr_data: EHRData
     transcript_chunk: TranscriptChunk
 
@@ -46,11 +46,15 @@ class Notification(BaseModel):
     )
 
 
-class PredictionResponse(BaseModel):
+class Notifications(BaseModel):
     notifications: list[Notification] = Field(
         default_factory=list,
         description="List of notifications. Should be empty if no errors are detected when comparing EHR data with the transcript chunk.",
     )
+
+
+class PredictionResponse(Notifications):
+    session_id: str
 
 
 class AgentArgs(BaseModel):
@@ -58,7 +62,7 @@ class AgentArgs(BaseModel):
     name: str
     instructions: str
     model_settings: ModelSettings
-    output_type: type[BaseModel] = PredictionResponse
+    output_type: type[BaseModel] = Notifications
 
     @field_validator("model_settings", mode="before")
     def validate_model_settings(cls, value: dict):
@@ -67,4 +71,5 @@ class AgentArgs(BaseModel):
 
 class Config(BaseModel):
     agent_args: AgentArgs
+    first_input_prompt_template: str
     input_prompt_template: str
