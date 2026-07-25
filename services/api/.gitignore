@@ -1,0 +1,10 @@
+.venv
+.env
+.ruff_cache
+.pytest_cache
+.mypy_cache
+__pycache__
+*.ipynb
+db/*.db
+db/*.db-*
+output/*.jsonl

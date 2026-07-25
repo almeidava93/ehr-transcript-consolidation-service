@@ -12,5 +12,5 @@ services:
 
     volumes:
       - type: bind
-        source: ./api
+        source: ./services/api/api
         target: /app/api

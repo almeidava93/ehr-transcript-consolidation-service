@@ -2,7 +2,7 @@ services:
   api:
     image: api
     build:
-      context: .
+      context: ./services/api
     ports:
       - 8080:8080
     healthcheck:
@@ -12,7 +12,7 @@ services:
       retries: 5
       start_period: 5s
     env_file:
-      - .env
+      - ./services/api/.env
     volumes:
       - type: bind
         source: ./db
