@@ -6,7 +6,15 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 class EHRData(BaseModel):
     "General class to store EHR data with unknown structure."
 
+    text: str | None = None
+
     model_config = ConfigDict(extra="allow")
+
+    @classmethod
+    def from_text(cls, text: str):
+        # Add line numbers to the text to facilitate application of edit suggestions
+        text = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(text.split("\n")))
+        return cls(text=text)
 
 
 class TranscriptChunk(BaseModel):
@@ -19,6 +27,12 @@ class PredictionRequest(BaseModel):
     session_id: str | None = Field(default=None)
     ehr_data: EHRData
     transcript_chunk: TranscriptChunk
+
+    @field_validator("ehr_data", mode="before")
+    def validate_ehr_data(cls, value):
+        if isinstance(value, str):
+            return EHRData.from_text(value)
+        return value
 
 
 class NotificationType(StrEnum):
@@ -34,6 +48,8 @@ class EditOperator(StrEnum):
 
 class EditSuggestion(BaseModel):
     """Suggested edit to the EHR data to resolve the error. Should be empty if no edit is suggested. Suggested edit is a dictionary where keys are the field names chained, if necessary, using dot notation and values are the suggested edits.
+
+    If the field is `text`, a dot notation can be used to determine the line number to be edited. For example, `field=text.1` will edit the first line of the `text` field. This is available only when the EHR data is provided as a single string instead of an object.
 
     Operators expected behavior:
 
@@ -51,7 +67,7 @@ class EditSuggestion(BaseModel):
     @model_validator(mode="after")
     def validate_edit_suggestion(self):
         # value is ignored when operator is remove
-        if self.operator == EditOperator.remove:
+        if self.operator == EditOperator.REMOVE:
             self.value = ""
         return self
 
