@@ -6,7 +6,10 @@ from agents.tracing.processors import BatchTraceProcessor
 import api.settings as settings
 from api.routers.v1.router import router as v1_router
 from api.routers.v1.tracing import SQLiteTracingExporter
+from api.logs import configure_logging, get_logger
 
+configure_logging()
+logger = get_logger(__name__)
 dotenv.load_dotenv()
 
 app = FastAPI(
