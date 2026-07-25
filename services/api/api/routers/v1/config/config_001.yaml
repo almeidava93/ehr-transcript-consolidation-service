@@ -11,11 +11,16 @@ agent_args: # kwargs for the Agent class
       effort: "medium"
   model: openai/gpt-5.6-sol 
 
-input_prompt_template: |
+first_input_prompt_template: |
   # Medical record
 
   {ehr_data}
 
+  # Transcript chunk
+  
+  {transcript_chunk}
+
+input_prompt_template: |
   # Transcript chunk
   
   {transcript_chunk}
