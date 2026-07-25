@@ -1,0 +1,16 @@
+services:
+  api:
+    command: >
+      uvicorn api.main:app
+      --host 0.0.0.0
+      --port 8080
+      --reload
+      --reload-dir /app/api
+
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+
+    volumes:
+      - type: bind
+        source: ./api
+        target: /app/api
