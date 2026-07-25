@@ -1,6 +1,6 @@
 from enum import StrEnum
 from agents import ModelSettings
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class EHRData(BaseModel):
@@ -26,11 +26,34 @@ class NotificationType(StrEnum):
     information_conflict = "information_conflict"
 
 
+class EditOperator(StrEnum):
+    ADD = "add"
+    REPLACE = "replace"
+    REMOVE = "remove"
+
+
 class EditSuggestion(BaseModel):
-    """Suggested edit to the EHR data to resolve the error. Should be empty if no edit is suggested. Suggested edit is a dictionary where keys are the field names chained, if necessary, using dot notation and values are the suggested edits."""
+    """Suggested edit to the EHR data to resolve the error. Should be empty if no edit is suggested. Suggested edit is a dictionary where keys are the field names chained, if necessary, using dot notation and values are the suggested edits.
+
+    Operators expected behavior:
+
+    - add: Add the value to the field. If the field is a string, the value is appended to the end of the string. If the field is an array, the value is appended to the end of the array.
+    - replace: Replace the value of the field entirely. If the field is an array, the field needs to include the index of the value to be replaced.
+    - remove: Remove the value of the field. If the field is an array, the field needs to include the index of the value to be removed. This operator ignores the value field.
+    """
 
     field: str
     value: str
+    operator: EditOperator = Field(
+        description="Operator to use when applying the suggested edit.",
+    )
+
+    @model_validator(mode="after")
+    def validate_edit_suggestion(self):
+        # value is ignored when operator is remove
+        if self.operator == EditOperator.remove:
+            self.value = ""
+        return self
 
 
 class Notification(BaseModel):
