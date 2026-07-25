@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY pyproject.toml .
 RUN pip install uv
-RUN uv sync --no-cache
+RUN uv sync --no-cache --no-install-project
 
 COPY . .
 
@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=test /app/pyproject.toml .
 COPY --from=test /app/uv.lock .
 RUN pip install uv
-RUN uv sync --locked --no-dev --no-cache
+RUN uv sync --locked --no-dev --no-cache --no-install-project
 
 # Create system user and home directory
 RUN groupadd -r appgroup && useradd -r -g appgroup -m user
