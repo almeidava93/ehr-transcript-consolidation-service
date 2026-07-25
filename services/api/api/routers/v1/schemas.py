@@ -26,12 +26,23 @@ class NotificationType(StrEnum):
     information_conflict = "information_conflict"
 
 
+class EditSuggestion(BaseModel):
+    """Suggested edit to the EHR data to resolve the error. Should be empty if no edit is suggested. Suggested edit is a dictionary where keys are the field names chained, if necessary, using dot notation and values are the suggested edits."""
+
+    field: str
+    value: str
+
+
 class Notification(BaseModel):
     type: NotificationType = Field(
         description="Type of error detected when comparing EHR data with the transcript chunk."
     )
     message: str = Field(
         description="Description of the error detected when comparing EHR data with the transcript chunk."
+    )
+    suggested_edit: EditSuggestion | None = Field(
+        default=None,
+        description="Suggested edit to the EHR data to resolve the error. Should be empty if no edit is suggested.",
     )
 
 
