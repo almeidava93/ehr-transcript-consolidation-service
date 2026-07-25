@@ -14,3 +14,16 @@ services:
       - type: bind
         source: ./services/api/api
         target: /app/api
+
+  frontend:
+    build:
+      target: builder
+    command: npm run dev
+    environment:
+      API_BASE_URL: http://api:8080
+      # Reliable file watching for bind mounts on Windows/Docker.
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - type: bind
+        source: ./services/frontend/app
+        target: /app/app
