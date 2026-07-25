@@ -5,6 +5,9 @@ import uuid
 
 from api.settings import BASE_PATH, TRACES_DB_PATH
 from api.routers.v1.schemas import Config, PredictionRequest, PredictionResponse
+from api.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 class PredictionService:
@@ -47,15 +50,22 @@ class PredictionService:
         if request.session_id is not None:
             session = SQLiteSession(request.session_id, TRACES_DB_PATH)
             input_prompt = config.input_prompt_template.format(
-                transcript_chunk=request.transcript_chunk
+                transcript_chunk=request.transcript_chunk.model_dump(
+                    mode="json", exclude_none=True
+                )
             )
 
         # first turn of the session
         else:
             session = cls.create_session()
             input_prompt = config.first_input_prompt_template.format(
-                ehr_data=request.ehr_data, transcript_chunk=request.transcript_chunk
+                ehr_data=request.ehr_data.model_dump(mode="json", exclude_none=True),
+                transcript_chunk=request.transcript_chunk.model_dump(
+                    mode="json", exclude_none=True
+                ),
             )
+
+        logger.debug(f"Input prompt: {input_prompt}")
 
         result = await Runner.run(agent, input_prompt, session=session)
         return PredictionResponse(
