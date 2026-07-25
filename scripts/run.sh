@@ -1,0 +1,1 @@
+docker run -p 8080:8080 --mount type=bind,source="./db",dst=/app/db --env-file .env api
