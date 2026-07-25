@@ -1,0 +1,19 @@
+services:
+  api:
+    image: api
+    build:
+      context: .
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    env_file:
+      - .env
+    volumes:
+      - type: bind
+        source: ./db
+        target: /app/db
