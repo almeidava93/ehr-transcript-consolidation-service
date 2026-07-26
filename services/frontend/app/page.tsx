@@ -1,308 +1,219 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import type {
-  EHRData,
-  PredictionResponse,
-  SegmentResult,
-  Transcript,
-  TranscriptChunk,
-} from "./types";
+import type { EhrModel, JsonValue, Transcript, UiNotification } from "./types";
+import { predict } from "./lib/api";
+import { applyEdit, describeEdit, serializeEhrForApi } from "./lib/ehr-edit";
+import InputScreen from "./components/InputScreen";
+import EhrPanel, { type ScrollToken } from "./components/EhrPanel";
+import NotificationsPanel from "./components/NotificationsPanel";
+import ThemeToggle from "./components/ThemeToggle";
 
-interface FileState<T> {
-  data: T | null;
-  fileName: string | null;
-  error: string | null;
-}
-
-const emptyFile = <T,>(): FileState<T> => ({
-  data: null,
-  fileName: null,
-  error: null,
-});
-
-async function readJsonFile(file: File): Promise<unknown> {
-  const text = await file.text();
-  return JSON.parse(text);
-}
-
-function isTranscript(value: unknown): value is Transcript {
+function Topbar({ onRestart }: { onRestart?: () => void }) {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    Array.isArray((value as { segments?: unknown }).segments)
+    <div className="topbar">
+      <span className="brand">
+        EHR Consolidation <span className="dot">·</span> Review
+      </span>
+      <span className="spacer" />
+      {onRestart && (
+        <button className="btn subtle" onClick={onRestart}>
+          Start over
+        </button>
+      )}
+      <ThemeToggle />
+    </div>
   );
 }
 
 export default function Home() {
-  const [ehr, setEhr] = useState<FileState<EHRData>>(emptyFile);
-  const [transcript, setTranscript] = useState<FileState<Transcript>>(emptyFile);
-  const [results, setResults] = useState<SegmentResult[]>([]);
+  const [screen, setScreen] = useState<"input" | "results">("input");
+  const [model, setModel] = useState<EhrModel | null>(null);
+  const [transcript, setTranscript] = useState<Transcript | null>(null);
+  const [notifications, setNotifications] = useState<UiNotification[]>([]);
   const [running, setRunning] = useState(false);
+  const [done, setDone] = useState(false);
+  const [processed, setProcessed] = useState(0);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [scrollToken, setScrollToken] = useState<ScrollToken | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const cancelRef = useRef(false);
+  const scrollNonce = useRef(0);
+  const ehrForApiRef = useRef<JsonValue | string>("");
 
-  const totalSegments = transcript.data?.segments.length ?? 0;
-  const processedCount = results.filter(
-    (r) => r.status === "done" || r.status === "error",
-  ).length;
+  const total = transcript?.segments.length ?? 0;
 
-  const { conflicts, missing } = useMemo(() => {
-    let conflicts = 0;
-    let missing = 0;
-    for (const r of results) {
-      for (const n of r.notifications) {
-        if (n.type === "information_conflict") conflicts++;
-        else if (n.type === "information_missing") missing++;
-      }
-    }
-    return { conflicts, missing };
-  }, [results]);
-
-  const canRun = ehr.data !== null && transcript.data !== null && !running;
-
-  async function handleEhrFile(file: File | undefined) {
-    if (!file) return;
-    try {
-      const data = await readJsonFile(file);
-      if (typeof data !== "object" || data === null || Array.isArray(data)) {
-        setEhr({ data: null, fileName: file.name, error: "Expected a JSON object." });
-        return;
-      }
-      setEhr({ data: data as EHRData, fileName: file.name, error: null });
-    } catch (e) {
-      setEhr({
-        data: null,
-        fileName: file.name,
-        error: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}`,
-      });
-    }
+  function start(ehr: EhrModel, tr: Transcript) {
+    ehrForApiRef.current = serializeEhrForApi(ehr);
+    setModel(ehr);
+    setTranscript(tr);
+    setNotifications([]);
+    setProcessed(0);
+    setDone(false);
+    setError(null);
+    setHoveredId(null);
+    setSelectedId(null);
+    setScrollToken(null);
+    setScreen("results");
+    void runSimulation(tr);
   }
 
-  async function handleTranscriptFile(file: File | undefined) {
-    if (!file) return;
-    try {
-      const data = await readJsonFile(file);
-      if (!isTranscript(data)) {
-        setTranscript({
-          data: null,
-          fileName: file.name,
-          error: 'Expected an object with a "segments" array.',
-        });
-        return;
-      }
-      setTranscript({ data, fileName: file.name, error: null });
-    } catch (e) {
-      setTranscript({
-        data: null,
-        fileName: file.name,
-        error: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}`,
-      });
-    }
-  }
-
-  async function predictSegment(
-    ehrData: EHRData,
-    chunk: TranscriptChunk,
-  ): Promise<PredictionResponse> {
-    const res = await fetch("/api/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ehr_data: ehrData, transcript_chunk: chunk }),
-    });
-    const payload = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        payload?.error ?? payload?.detail ?? `Request failed (${res.status})`,
-      );
-    }
-    return payload as PredictionResponse;
-  }
-
-  async function runSimulation() {
-    if (!ehr.data || !transcript.data) return;
-    const ehrData = ehr.data;
-    const segments = transcript.data.segments;
-
+  async function runSimulation(tr: Transcript) {
     cancelRef.current = false;
     setRunning(true);
-    // Seed every segment as pending so the full list renders up front.
-    setResults(
-      segments.map((segment) => ({
-        segment,
-        status: "pending",
-        notifications: [],
-      })),
-    );
+    let sessionId: string | null = null;
+    const ehrData = ehrForApiRef.current;
 
-    for (let i = 0; i < segments.length; i++) {
+    for (let i = 0; i < tr.segments.length; i++) {
       if (cancelRef.current) break;
-
-      setResults((prev) => {
-        const next = [...prev];
-        next[i] = { ...next[i], status: "processing" };
-        return next;
-      });
-
+      const seg = tr.segments[i];
       try {
-        const response = await predictSegment(ehrData, segments[i]);
-        setResults((prev) => {
-          const next = [...prev];
-          next[i] = {
-            ...next[i],
-            status: "done",
-            notifications: response.notifications ?? [],
-          };
-          return next;
-        });
+        const res = await predict({ sessionId, ehrData, chunk: seg });
+        sessionId = res.session_id;
+        const fresh: UiNotification[] = res.notifications.map((no, j) => ({
+          id: `${i}-${j}`,
+          segment: seg,
+          type: no.type,
+          message: no.message,
+          edit: no.suggested_edit ?? null,
+          status: "pending",
+        }));
+        if (fresh.length) setNotifications((prev) => [...prev, ...fresh]);
       } catch (e) {
-        setResults((prev) => {
-          const next = [...prev];
-          next[i] = {
-            ...next[i],
-            status: "error",
-            error: e instanceof Error ? e.message : String(e),
-          };
-          return next;
-        });
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setProcessed(i + 1);
       }
     }
-
     setRunning(false);
+    setDone(true);
   }
 
-  function stopSimulation() {
+  function restart() {
     cancelRef.current = true;
+    setScreen("input");
+    setModel(null);
+    setTranscript(null);
+    setNotifications([]);
+    setRunning(false);
+    setDone(false);
+    setProcessed(0);
+    setHoveredId(null);
+    setSelectedId(null);
+    setScrollToken(null);
+    setError(null);
   }
 
-  const progressPct = totalSegments
-    ? Math.round((processedCount / totalSegments) * 100)
-    : 0;
+  // Hover previews transiently; a click selects and keeps the preview sticky.
+  const activeId = hoveredId ?? selectedId;
+  const active = notifications.find((n) => n.id === activeId) ?? null;
+  const preview = useMemo(() => {
+    if (!model || !active || !active.edit || active.status !== "pending") return null;
+    return describeEdit(model, active.edit);
+  }, [model, active]);
+
+  // Clicking a card scrolls the EHR panel to the edit target and pins the preview.
+  function select(n: UiNotification) {
+    if (!n.edit) return;
+    setSelectedId(n.id);
+    scrollNonce.current += 1;
+    setScrollToken({ path: n.edit.field, nonce: scrollNonce.current });
+  }
+
+  function approve(n: UiNotification) {
+    if (!model || !n.edit) return;
+    const res = applyEdit(model, n.edit);
+    if (res.ok) {
+      setModel(res.model);
+      setNotifications((prev) =>
+        prev.map((x) => (x.id === n.id ? { ...x, status: "approved" } : x)),
+      );
+      setHoveredId(null);
+      if (selectedId === n.id) setSelectedId(null);
+    } else {
+      setError(res.error ?? "Could not apply edit.");
+    }
+  }
+
+  function reject(id: string) {
+    setNotifications((prev) =>
+      prev.map((x) => (x.id === id ? { ...x, status: "rejected" } : x)),
+    );
+    setHoveredId(null);
+    if (selectedId === id) setSelectedId(null);
+  }
+
+  if (screen === "input" || !model || !transcript) {
+    return (
+      <div className="app">
+        <Topbar />
+        <InputScreen onStart={start} />
+      </div>
+    );
+  }
+
+  const pendingCount = notifications.filter(
+    (n) => n.status === "pending" && n.edit,
+  ).length;
+  const progressPct = total ? Math.round((processed / total) * 100) : 0;
+  const ehrMeta =
+    model.kind === "json"
+      ? "structured JSON"
+      : `${model.lines.length} lines`;
 
   return (
-    <main className="container">
-      <h1>EHR × Transcript Simulator</h1>
-      <p className="subtitle">
-        Upload the patient EHR (JSON) and a transcript (JSON), then run the
-        simulation. Each transcript span is sent to <code>/v1/predict</code> in
-        order — notifications appear as they are generated.
-      </p>
-
-      <section className="panel">
-        <div className="field">
-          <label className="field-label" htmlFor="ehr">
-            EHR data (JSON object)
-          </label>
-          <input
-            id="ehr"
-            type="file"
-            accept="application/json,.json"
-            onChange={(e) => handleEhrFile(e.target.files?.[0])}
-          />
-          <div className="hint">
-            e.g. <code>data/medical-record.json</code>
+    <div className="app">
+      <Topbar onRestart={restart} />
+      <div className="results">
+        <div className="pane left">
+          <div className="pane-head">
+            EHR data
+            <span className="count">{ehrMeta}</span>
           </div>
-          {ehr.fileName && !ehr.error && (
-            <div className="status-line ok">Loaded {ehr.fileName}</div>
-          )}
-          {ehr.error && <div className="status-line err">{ehr.error}</div>}
+          <EhrPanel model={model} preview={preview} scrollToken={scrollToken} />
         </div>
 
-        <div className="field">
-          <label className="field-label" htmlFor="transcript">
-            Transcript (JSON with a <code>segments</code> array)
-          </label>
-          <input
-            id="transcript"
-            type="file"
-            accept="application/json,.json"
-            onChange={(e) => handleTranscriptFile(e.target.files?.[0])}
-          />
-          <div className="hint">
-            e.g. <code>data/transcript.json</code>
-          </div>
-          {transcript.fileName && !transcript.error && (
-            <div className="status-line ok">
-              Loaded {transcript.fileName} — {totalSegments} segment
-              {totalSegments === 1 ? "" : "s"}
-            </div>
-          )}
-          {transcript.error && (
-            <div className="status-line err">{transcript.error}</div>
-          )}
-        </div>
-
-        <div className="actions">
-          <button
-            className="primary"
-            onClick={runSimulation}
-            disabled={!canRun}
-          >
-            {running ? "Running…" : "Run simulation"}
-          </button>
-          {running && (
-            <button className="ghost" onClick={stopSimulation}>
-              Stop
-            </button>
-          )}
-        </div>
-      </section>
-
-      {results.length > 0 && (
-        <>
-          <div className="progress">
+        <div className="pane">
+          <div className="statusbar">
             {running && <span className="spinner" aria-hidden />}
             <span>
-              {processedCount} / {totalSegments} processed
+              {processed}/{total} spans
             </span>
-            <div className="progress-bar" aria-hidden>
+            <div className="progress-track" aria-hidden>
               <span style={{ width: `${progressPct}%` }} />
             </div>
+            <span>
+              {notifications.length} notes
+              {pendingCount > 0 ? ` · ${pendingCount} to review` : ""}
+            </span>
           </div>
-
-          <div className="summary-badges">
-            <span className="badge conflict">{conflicts} conflicts</span>
-            <span className="badge missing">{missing} missing</span>
-          </div>
-
-          <section>
-            {results.map((r, i) => (
-              <div
-                key={i}
-                className={`segment ${r.status === "processing" ? "processing" : ""}`}
-              >
-                <div className="segment-head">
-                  <span className="timestamp">{r.segment.t}</span>
-                  <span className="speaker">{r.segment.speaker}</span>
-                  <span className={`state-tag ${r.status}`}>
-                    {r.status === "processing" ? "processing…" : r.status}
-                  </span>
-                </div>
-                <p className="segment-text">{r.segment.text}</p>
-
-                {r.status === "done" &&
-                  (r.notifications.length > 0 ? (
-                    <div className="notifications">
-                      {r.notifications.map((n, j) => (
-                        <div key={j} className={`notification ${n.type}`}>
-                          <span className="n-type">
-                            {n.type.replace("information_", "")}
-                          </span>
-                          {n.message}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="no-issues">No issues detected</div>
-                  ))}
-
-                {r.status === "error" && (
-                  <div className="error-text">Error: {r.error}</div>
-                )}
-              </div>
-            ))}
-          </section>
-        </>
-      )}
-    </main>
+          {error && (
+            <div
+              style={{
+                padding: "8px 16px",
+                fontSize: 12,
+                color: "var(--conflict)",
+                borderBottom: "1px solid var(--border)",
+              }}
+            >
+              {error}
+            </div>
+          )}
+          <NotificationsPanel
+            notifications={notifications}
+            model={model}
+            activeId={activeId}
+            running={running}
+            done={done}
+            onHover={setHoveredId}
+            onSelect={select}
+            onApprove={approve}
+            onReject={reject}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
