@@ -27,9 +27,13 @@ with open(transcript_path, "r") as f:
     transcript = json.loads(f.read())
 
 
-def send_request(ehr_data, transcript_chunk):
+def send_request(ehr_data, transcript_chunk, session_id=None):
     url = "http://localhost:8080/v1/predict"
-    data = {"ehr_data": ehr_data, "transcript_chunk": transcript_chunk}
+    data = {
+        "session_id": session_id,
+        "ehr_data": ehr_data,
+        "transcript_chunk": transcript_chunk,
+    }
     response = requests.post(url, json=data)
     return response
 
@@ -40,10 +44,11 @@ def main():
     output_file_path.touch()
 
     logger.info(f"Simulation ID: {simulation_id}")
+    session_id = None
     for transcript_chunk in tqdm(
         transcript["segments"], desc="Validating EHR with transcript segments"
     ):
-        response = send_request(ehr_data, transcript_chunk)
+        response = send_request(ehr_data, transcript_chunk, session_id)
 
         with jsonlines.open(output_file_path, mode="a") as writer:
             writer.write(
@@ -52,6 +57,9 @@ def main():
                     "response": response.json(),
                 }
             )
+
+        if session_id is None:
+            session_id = response.json()["session_id"]
 
 
 if __name__ == "__main__":

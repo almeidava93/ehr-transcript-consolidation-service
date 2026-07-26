@@ -3,15 +3,20 @@ from fastapi import FastAPI
 import dotenv
 from agents.tracing.processors import BatchTraceProcessor
 
+import api.settings as settings
 from api.routers.v1.router import router as v1_router
 from api.routers.v1.tracing import SQLiteTracingExporter
+from api.logs import configure_logging, get_logger
 
+configure_logging()
+logger = get_logger(__name__)
 dotenv.load_dotenv()
 
 app = FastAPI(
-    title="EHR and transcript validation service",
+    title=settings.TITLE,
     docs_url="/docs",
     redoc_url=None,
+    version=settings.VERSION,
 )
 
 # Setup tracing
@@ -24,3 +29,8 @@ app.include_router(v1_router)
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/version")
+async def version():
+    return {"version": settings.VERSION}

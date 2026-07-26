@@ -1,13 +1,20 @@
 from enum import StrEnum
-
 from agents import ModelSettings
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class EHRData(BaseModel):
     "General class to store EHR data with unknown structure."
 
+    text: str | None = None
+
     model_config = ConfigDict(extra="allow")
+
+    @classmethod
+    def from_text(cls, text: str):
+        # Add line numbers to the text to facilitate application of edit suggestions
+        text = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(text.split("\n")))
+        return cls(text=text)
 
 
 class TranscriptChunk(BaseModel):
@@ -17,8 +24,15 @@ class TranscriptChunk(BaseModel):
 
 
 class PredictionRequest(BaseModel):
+    session_id: str | None = Field(default=None)
     ehr_data: EHRData
     transcript_chunk: TranscriptChunk
+
+    @field_validator("ehr_data", mode="before")
+    def validate_ehr_data(cls, value):
+        if isinstance(value, str):
+            return EHRData.from_text(value)
+        return value
 
 
 class NotificationType(StrEnum):
@@ -26,11 +40,36 @@ class NotificationType(StrEnum):
     information_conflict = "information_conflict"
 
 
+class EditOperator(StrEnum):
+    ADD = "add"
+    REPLACE = "replace"
+    REMOVE = "remove"
+
+
 class EditSuggestion(BaseModel):
-    """Suggested edit to the EHR data to resolve the error. Should be empty if no edit is suggested. Suggested edit is a dictionary where keys are the field names chained, if necessary, using dot notation and values are the suggested edits."""
+    """Suggested edit to the EHR data to resolve the error. Should be empty if no edit is suggested. Suggested edit is a dictionary where keys are the field names chained, if necessary, using dot notation and values are the suggested edits.
+
+    If the field is `text`, a dot notation can be used to determine the line number to be edited. For example, `field=text.1` will edit the first line of the `text` field. This is available only when the EHR data is provided as a single string instead of an object.
+
+    Operators expected behavior:
+
+    - add: Add the value to the field. If the field is a string, the value is appended to the end of the string. If the field is an array, the value is appended to the end of the array.
+    - replace: Replace the value of the field entirely. If the field is an array, the field needs to include the index of the value to be replaced.
+    - remove: Remove the value of the field. If the field is an array, the field needs to include the index of the value to be removed. This operator ignores the value field.
+    """
 
     field: str
     value: str
+    operator: EditOperator = Field(
+        description="Operator to use when applying the suggested edit.",
+    )
+
+    @model_validator(mode="after")
+    def validate_edit_suggestion(self):
+        # value is ignored when operator is remove
+        if self.operator == EditOperator.REMOVE:
+            self.value = ""
+        return self
 
 
 class Notification(BaseModel):
@@ -46,11 +85,15 @@ class Notification(BaseModel):
     )
 
 
-class PredictionResponse(BaseModel):
+class Notifications(BaseModel):
     notifications: list[Notification] = Field(
         default_factory=list,
         description="List of notifications. Should be empty if no errors are detected when comparing EHR data with the transcript chunk.",
     )
+
+
+class PredictionResponse(Notifications):
+    session_id: str
 
 
 class AgentArgs(BaseModel):
@@ -58,7 +101,7 @@ class AgentArgs(BaseModel):
     name: str
     instructions: str
     model_settings: ModelSettings
-    output_type: type[BaseModel] = PredictionResponse
+    output_type: type[BaseModel] = Notifications
 
     @field_validator("model_settings", mode="before")
     def validate_model_settings(cls, value: dict):
@@ -67,4 +110,5 @@ class AgentArgs(BaseModel):
 
 class Config(BaseModel):
     agent_args: AgentArgs
+    first_input_prompt_template: str
     input_prompt_template: str
