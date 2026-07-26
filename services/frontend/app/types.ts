@@ -1,6 +1,12 @@
 // Mirrors the API contract in services/api/api/routers/v1/schemas.py
 
-export type EHRData = Record<string, unknown>;
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
 export interface TranscriptChunk {
   t: string; // "HH:MM:SS"
@@ -15,20 +21,42 @@ export interface Transcript {
 
 export type NotificationType = "information_missing" | "information_conflict";
 
-export interface Notification {
+export type EditOperator = "add" | "replace" | "remove";
+
+export interface EditSuggestion {
+  // Dot-notation path into the EHR. For text EHR, e.g. "text.3" targets line 3.
+  field: string;
+  value: string;
+  operator: EditOperator;
+}
+
+export interface ApiNotification {
   type: NotificationType;
   message: string;
+  suggested_edit?: EditSuggestion | null;
 }
 
 export interface PredictionResponse {
-  notifications: Notification[];
+  notifications: ApiNotification[];
+  session_id: string;
 }
 
-export type SegmentStatus = "pending" | "processing" | "done" | "error";
+// ---- Client-side view models ----
 
-export interface SegmentResult {
+// The EHR document the UI renders and edits. Either a parsed JSON object or a
+// list of raw text lines (when uploaded as .txt).
+export type EhrModel =
+  | { kind: "json"; data: JsonValue }
+  | { kind: "text"; lines: string[] };
+
+export type EditStatus = "pending" | "approved" | "rejected";
+
+// A single notification as tracked in the UI, tied to the segment it came from.
+export interface UiNotification {
+  id: string;
   segment: TranscriptChunk;
-  status: SegmentStatus;
-  notifications: Notification[];
-  error?: string;
+  type: NotificationType;
+  message: string;
+  edit: EditSuggestion | null;
+  status: EditStatus; // pending until the user approves/rejects an edit
 }
