@@ -1,73 +1,105 @@
 from typing import Optional
-from agents import Agent, Runner, SQLiteSession
-import yaml
-import uuid
+from uuid import uuid4
 
-from api.settings import BASE_PATH, TRACES_DB_PATH
-from api.routers.v1.schemas import Config, PredictionRequest, PredictionResponse
+import yaml
+from agents import Agent, RunResult, Runner, SQLiteSession
+
 from api.logs import get_logger
+from api.routers.v1.schemas import Config, PredictionRequest, PredictionResponse
+from api.settings import BASE_PATH, TRACES_DB_PATH
 
 logger = get_logger(__name__)
 
 
 class PredictionService:
-    default_config_version: str = "config_001"
+    default_config_version = "config_001"
 
     @classmethod
-    def load_config(cls, config_version: Optional[str] = None) -> Config:
-        if config_version is None:
-            config_version = cls.default_config_version
+    def load_config(cls, config_version: str | None = None) -> Config:
+        config_version = config_version or cls.default_config_version
 
         config_path = BASE_PATH / "routers" / "v1" / "config" / f"{config_version}.yaml"
-        with open(config_path, "r") as f:
-            return Config(**yaml.safe_load(f))
+
+        with config_path.open(encoding="utf-8") as file:
+            return Config(**yaml.safe_load(file))
 
     @classmethod
     def make_agent(cls, config: Config) -> Agent:
         model_id = config.agent_args.model
-        if model_id.startswith("openai/"):
-            agent = Agent(
-                **config.agent_args.model_dump(exclude={"model_settings"}),
-                model_settings=config.agent_args.model_settings,
-            )
-            return agent
-        else:
+
+        if not model_id.startswith("openai/"):
             raise ValueError(f"Unsupported model_id: {model_id}")
+
+        return Agent(
+            **config.agent_args.model_dump(exclude={"model_settings"}),
+            model_settings=config.agent_args.model_settings,
+        )
 
     @classmethod
     def create_session(cls) -> SQLiteSession:
-        session_id = "session_id_" + str(uuid.uuid4())
+        session_id = f"session_id_{uuid4()}"
         return SQLiteSession(session_id, TRACES_DB_PATH)
 
     @classmethod
+    def resolve_session(cls, session_id: str | None) -> SQLiteSession:
+        """Reuse an existing session or create a new one."""
+        if session_id is not None:
+            return SQLiteSession(session_id, TRACES_DB_PATH)
+
+        return cls.create_session()
+
+    @classmethod
+    async def run_agent(
+        cls,
+        agent: Agent,
+        input_prompt: str,
+        session: SQLiteSession,
+    ) -> RunResult:
+        """Boundary around the external agent runner."""
+        return await Runner.run(
+            agent,
+            input_prompt,
+            session=session,
+        )
+
+    @classmethod
     async def predict(
-        cls, request: PredictionRequest, config_version: Optional[str] = None
+        cls,
+        request: PredictionRequest,
+        config_version: Optional[str] = None,
     ) -> PredictionResponse:
         config = cls.load_config(config_version)
         agent = cls.make_agent(config)
+        session = cls.resolve_session(request.session_id)
 
-        # if this is not the first turn in the session
         if request.session_id is not None:
-            session = SQLiteSession(request.session_id, TRACES_DB_PATH)
             input_prompt = config.input_prompt_template.format(
                 transcript_chunk=request.transcript_chunk.model_dump(
-                    mode="json", exclude_none=True
+                    mode="json",
+                    exclude_none=True,
                 )
             )
-
-        # first turn of the session
         else:
-            session = cls.create_session()
             input_prompt = config.first_input_prompt_template.format(
-                ehr_data=request.ehr_data.model_dump(mode="json", exclude_none=True),
+                ehr_data=request.ehr_data.model_dump(
+                    mode="json",
+                    exclude_none=True,
+                ),
                 transcript_chunk=request.transcript_chunk.model_dump(
-                    mode="json", exclude_none=True
+                    mode="json",
+                    exclude_none=True,
                 ),
             )
 
-        logger.debug(f"Input prompt: {input_prompt}")
+        logger.debug("Input prompt: %s", input_prompt)
 
-        result = await Runner.run(agent, input_prompt, session=session)
+        result = await cls.run_agent(
+            agent=agent,
+            input_prompt=input_prompt,
+            session=session,
+        )
+
         return PredictionResponse(
-            session_id=session.session_id, **result.final_output.model_dump()
+            session_id=session.session_id,
+            **result.final_output.model_dump(),
         )
