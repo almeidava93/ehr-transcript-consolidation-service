@@ -6,7 +6,10 @@ minikube image build --target production -t frontend:latest ./services/frontend
 kubectl apply -f k8s/namespace.yaml
 
 # Create secrets
-kubectl apply -R -f k8s/secrets/
+kubectl apply -R -f k8s/secrets/_*.yaml
 
 # Create other resources (deployments, services, etc.) from the k8s directory
-kubectl apply -R -f k8s/
+kubectl apply -R -f k8s/mysql/
+kubectl apply -R -f k8s/redis/
+kubectl apply -R -f k8s/api/
+kubectl apply -R -f k8s/frontend/
