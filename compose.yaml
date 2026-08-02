@@ -13,6 +13,8 @@ services:
       start_period: 5s
     env_file:
       - ./services/api/.env
+    environment:
+      REDIS_URL: redis://redis-service:6379
     volumes:
       - type: bind
         source: ./db
@@ -27,6 +29,14 @@ services:
     environment:
       # Reached over the compose network, not the host port mapping.
       API_BASE_URL: http://api:8080
-    depends_on:
-      api:
-        condition: service_healthy
+
+  redis-service:
+    image: redis
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s

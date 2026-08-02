@@ -9,7 +9,7 @@ metadata: # Deployment metadata
     app.kubernetes.io/part-of: ehr-transcript-consolidation-service
 
 spec: # Deployment specification
-  replicas: 1
+  # replicas managed by HPA
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 300
   minReadySeconds: 10

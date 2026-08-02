@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: redis-deployment
+  namespace: ehr-transcript-consolidation-service
+  labels:
+    app.kubernetes.io/name: redis-deployment
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: ehr-transcript-consolidation-service
+
+spec: # Deployment specification
+  replicas: 1
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 300
+  minReadySeconds: 10
+
+  strategy:
+    type: RollingUpdate # default
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis-pod
+      app.kubernetes.io/component: backend
+
+  template: # Pod template 
+    metadata: # Pod metadata
+      labels:
+        app.kubernetes.io/name: redis-pod
+        app.kubernetes.io/component: backend
+
+    spec: # Pod specification
+      containers:
+      - name: redis
+        image: redis
+        imagePullPolicy: Never # default
+
+        ports:
+        - name: http
+          containerPort: 6379
+          protocol: TCP
+
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
