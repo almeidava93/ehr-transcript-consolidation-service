@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from api.routers.v1.schemas import PredictionRequest, PredictionResponse
 from api.routers.v1.service import PredictionService
 
+
 router = APIRouter(
     prefix="/v1",
 )

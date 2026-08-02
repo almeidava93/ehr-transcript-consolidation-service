@@ -19,6 +19,9 @@ services:
       - type: bind
         source: ./db
         target: /app/db
+    depends_on:
+      mysql-service:
+        condition: service_healthy
 
   frontend:
     image: frontend
@@ -30,6 +33,7 @@ services:
       # Reached over the compose network, not the host port mapping.
       API_BASE_URL: http://api:8080
 
+
   redis-service:
     image: redis
     ports:
@@ -40,3 +44,23 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+
+  mysql-service:
+    image: mysql:8.4
+    env_file:
+      - ./services/api/.env
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mysqladmin ping -h localhost -u root --password="$$MYSQL_ROOT_PASSWORD"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql-data:
