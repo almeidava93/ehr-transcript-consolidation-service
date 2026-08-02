@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -23,21 +24,21 @@ def test_resolve_session_reuses_existing_session_id(
     monkeypatch,
 ) -> None:
     fake_session = SimpleNamespace(session_id=TEST_SESSION_ID)
-    sqlite_session_mock = Mock(return_value=fake_session)
+    session_mock = Mock(return_value=fake_session)
 
     monkeypatch.setattr(
-        service_module,
-        "SQLiteSession",
-        sqlite_session_mock,
+        service_module.RedisSession,
+        "from_url",
+        session_mock,
     )
 
     session = PredictionService.resolve_session(TEST_SESSION_ID)
 
     assert session.session_id == TEST_SESSION_ID
 
-    sqlite_session_mock.assert_called_once_with(
+    session_mock.assert_called_once_with(
         TEST_SESSION_ID,
-        TRACES_DB_PATH,
+        url=os.environ.get("REDIS_URL"),
     )
 
 

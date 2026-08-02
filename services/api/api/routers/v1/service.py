@@ -1,18 +1,21 @@
+import os
 from typing import Optional
 from uuid import uuid4
 
 import yaml
-from agents import Agent, RunResult, Runner, SQLiteSession
+from agents import Agent, RunResult, Runner
+from agents.extensions.memory.redis_session import RedisSession
 
 from api.logs import get_logger
 from api.routers.v1.schemas import Config, PredictionRequest, PredictionResponse
-from api.settings import BASE_PATH, TRACES_DB_PATH
+from api.settings import BASE_PATH
 
 logger = get_logger(__name__)
 
 
 class PredictionService:
     default_config_version = "config_001"
+    redis_url = os.environ.get("REDIS_URL")
 
     @classmethod
     def load_config(cls, config_version: str | None = None) -> Config:
@@ -36,15 +39,15 @@ class PredictionService:
         )
 
     @classmethod
-    def create_session(cls) -> SQLiteSession:
+    def create_session(cls) -> RedisSession:
         session_id = f"session_id_{uuid4()}"
-        return SQLiteSession(session_id, TRACES_DB_PATH)
+        return RedisSession.from_url(session_id, url=cls.redis_url)
 
     @classmethod
-    def resolve_session(cls, session_id: str | None) -> SQLiteSession:
+    def resolve_session(cls, session_id: str | None) -> RedisSession:
         """Reuse an existing session or create a new one."""
         if session_id is not None:
-            return SQLiteSession(session_id, TRACES_DB_PATH)
+            return RedisSession.from_url(session_id, url=cls.redis_url)
 
         return cls.create_session()
 
@@ -53,7 +56,7 @@ class PredictionService:
         cls,
         agent: Agent,
         input_prompt: str,
-        session: SQLiteSession,
+        session: RedisSession,
     ) -> RunResult:
         """Boundary around the external agent runner."""
         return await Runner.run(

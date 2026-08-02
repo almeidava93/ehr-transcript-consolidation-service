@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata: 
-  name: frontend-deployment
+  name: redis-deployment
   namespace: ehr-transcript-consolidation-service
   labels:
-    app.kubernetes.io/name: frontend-deployment
-    app.kubernetes.io/component: frontend
+    app.kubernetes.io/name: redis-deployment
+    app.kubernetes.io/component: backend
     app.kubernetes.io/part-of: ehr-transcript-consolidation-service
 
 spec: # Deployment specification
@@ -22,24 +22,24 @@ spec: # Deployment specification
 
   selector:
     matchLabels:
-      app.kubernetes.io/name: frontend-pod
-      app.kubernetes.io/component: frontend
+      app.kubernetes.io/name: redis-pod
+      app.kubernetes.io/component: backend
 
   template: # Pod template 
     metadata: # Pod metadata
       labels:
-        app.kubernetes.io/name: frontend-pod
-        app.kubernetes.io/component: frontend
+        app.kubernetes.io/name: redis-pod
+        app.kubernetes.io/component: backend
 
     spec: # Pod specification
       containers:
-      - name: frontend
-        image: frontend
-        imagePullPolicy: IfNotPresent # default
+      - name: redis
+        image: redis
+        imagePullPolicy: Never # default
 
         ports:
         - name: http
-          containerPort: 3000
+          containerPort: 6379
           protocol: TCP
 
         resources:
@@ -49,7 +49,3 @@ spec: # Deployment specification
           requests:
             memory: "128Mi"
             cpu: "250m"
-
-        env:
-        - name: API_BASE_URL
-          value: http://api:8080
