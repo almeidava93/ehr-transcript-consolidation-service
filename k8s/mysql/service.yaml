@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: ehr-transcript-consolidation-service
+  labels:
+    app.kubernetes.io/name: mysql-service
+    app.kubernetes.io/component: database
+
+spec:
+  ports:
+  - port: 3306
+
+  selector:
+    app.kubernetes.io/name: mysql-pod
+    app.kubernetes.io/component: database

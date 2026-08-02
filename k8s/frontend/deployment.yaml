@@ -35,7 +35,7 @@ spec: # Deployment specification
       containers:
       - name: frontend
         image: frontend
-        imagePullPolicy: Never # default
+        imagePullPolicy: IfNotPresent # default
 
         ports:
         - name: http

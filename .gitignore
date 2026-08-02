@@ -2,3 +2,4 @@ db/*.db
 db/*.db-*
 output/*.json
 output/*.jsonl
+k8s/secrets/*.yaml

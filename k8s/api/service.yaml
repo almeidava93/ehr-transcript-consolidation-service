@@ -5,7 +5,8 @@ metadata:
   name: api # service DNS hostname
   namespace: ehr-transcript-consolidation-service
   labels:
-    app: api-service
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/component: backend
 
 spec:
   type: ClusterIP

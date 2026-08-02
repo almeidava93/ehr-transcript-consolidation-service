@@ -19,7 +19,6 @@ DEFAULT_DATE_FORMAT: Final = "%Y-%m-%d %H:%M:%S"
 # Database settings
 MYSQL_USER: str | None = os.environ.get("MYSQL_USER")
 MYSQL_PASSWORD: str | None = os.environ.get("MYSQL_PASSWORD")
-MYSQL_ROOT_PASSWORD: str | None = os.environ.get("MYSQL_ROOT_PASSWORD")
 MYSQL_HOST: str | None = os.environ.get("MYSQL_HOST")
 MYSQL_PORT: int = int(os.environ.get("MYSQL_PORT", default=3306))
 MYSQL_DATABASE: str | None = os.environ.get("MYSQL_DATABASE")
