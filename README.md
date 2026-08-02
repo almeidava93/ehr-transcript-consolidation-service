@@ -45,6 +45,16 @@ A response is a list of `notifications`, each with a `type`
 (`information_missing` | `information_conflict`), a `message`, and an optional
 `suggested_edit` (`add` / `replace` / `remove` against a field path in the EHR).
 
+### Demo 
+
+Here is a short video showing the processing of a fictional medical encounter in the context of the patient's EHR summary data. The frontend shows notifications popping up and, some of them, include important edit suggestions to make the EHR summary align with the information collected during the medical encounter.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=vZOHQUEYVy8">
+    <img src="https://img.youtube.com/vi/vZOHQUEYVy8/0.jpg" alt="Watch the EHR transcript consolidation app demo" width="600">
+  </a>
+</p>
+
 ---
 
 ## Repository structure
