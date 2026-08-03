@@ -1,10 +1,8 @@
-import os
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import api.routers.v1.service as service_module
 
-from api.settings import TRACES_DB_PATH
 from api.routers.v1.service import PredictionService
 
 TEST_SESSION_ID = "test_session_id"
@@ -26,6 +24,14 @@ def test_resolve_session_reuses_existing_session_id(
     fake_session = SimpleNamespace(session_id=TEST_SESSION_ID)
     session_mock = Mock(return_value=fake_session)
 
+    fake_redis_url = "fake://redis_url"
+
+    monkeypatch.setattr(
+        PredictionService,
+        "redis_url",
+        fake_redis_url,
+    )
+
     monkeypatch.setattr(
         service_module.RedisSession,
         "from_url",
@@ -38,7 +44,7 @@ def test_resolve_session_reuses_existing_session_id(
 
     session_mock.assert_called_once_with(
         TEST_SESSION_ID,
-        url=os.environ.get("REDIS_URL"),
+        url=fake_redis_url,
     )
 
 
@@ -48,10 +54,17 @@ def test_resolve_session_creates_new_session_when_id_is_missing(
     fake_session = SimpleNamespace(session_id=GENERATED_SESSION_ID)
     create_session_mock = Mock(return_value=fake_session)
 
+    fake_redis_url = "fake://redis_url"
+
     monkeypatch.setattr(
         PredictionService,
         "create_session",
         create_session_mock,
+    )
+    monkeypatch.setattr(
+        PredictionService,
+        "redis_url",
+        fake_redis_url,
     )
 
     session = PredictionService.resolve_session(None)

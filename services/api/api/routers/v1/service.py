@@ -41,12 +41,16 @@ class PredictionService:
     @classmethod
     def create_session(cls) -> RedisSession:
         session_id = f"session_id_{uuid4()}"
+        if cls.redis_url is None:
+            raise ValueError("REDIS_URL is not set")
         return RedisSession.from_url(session_id, url=cls.redis_url)
 
     @classmethod
     def resolve_session(cls, session_id: str | None) -> RedisSession:
         """Reuse an existing session or create a new one."""
         if session_id is not None:
+            if cls.redis_url is None:
+                raise ValueError("REDIS_URL is not set")
             return RedisSession.from_url(session_id, url=cls.redis_url)
 
         return cls.create_session()
