@@ -3,6 +3,7 @@ services:
     image: api
     build:
       context: ./services/api
+      target: production
     ports:
       - 8080:8080
     healthcheck:
@@ -27,6 +28,7 @@ services:
     image: frontend
     build:
       context: ./services/frontend
+      target: production
     ports:
       - 3000:3000
     environment:
