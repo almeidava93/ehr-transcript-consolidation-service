@@ -63,7 +63,7 @@ spec: # Deployment specification
 
       containers:
       - name: api
-        image: api:latest
+        image: southamerica-east1-docker.pkg.dev/ehr-transcript-consolidation/ehr-transcript-consolidation-docker-repo/api:latest
         imagePullPolicy: IfNotPresent
 
         envFrom:

@@ -34,7 +34,7 @@ spec: # Deployment specification
     spec: # Pod specification
       containers:
       - name: frontend
-        image: frontend
+        image: southamerica-east1-docker.pkg.dev/ehr-transcript-consolidation/ehr-transcript-consolidation-docker-repo/frontend:latest
         imagePullPolicy: IfNotPresent # default
 
         ports:
