@@ -1,0 +1,87 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - production
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  NAMESPACE: ehr-transcript-consolidation-service
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v3
+        with:
+            workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+            service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      # Get credenttials to authenticate kubectl
+      - run: |
+            gcloud container clusters get-credentials autopilot-cluster-1 --region ${{ secrets.GCP_REGION }}
+      
+      # Configure Docker to use the Google Artifact Registry
+      - run: |
+            gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      # Build images
+      - run: |
+            docker compose -f compose.yaml build
+
+      # Tag images
+      - run: |
+            docker tag api ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/api:${{ github.sha }}
+            docker tag frontend ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/frontend:${{ github.sha }}
+      
+      # Add those with the "latest" tag as well
+      - run: |
+            docker tag api ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/api:latest
+            docker tag frontend ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/frontend:latest
+
+      # Push all images
+      - run: |
+            docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/api:${{ github.sha }}
+            docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/frontend:${{ github.sha }}
+
+            docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/api:latest
+            docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/frontend:latest
+
+      # Apply Kubernetes manifests
+      - run: |
+            kubectl apply -R -f k8s/mysql/
+            kubectl apply -R -f k8s/redis/
+            kubectl apply -R -f k8s/api/
+            kubectl apply -R -f k8s/frontend/
+
+      # Set the image for the deployments to the latest pushed image
+      - run: |
+            kubectl set image deployment/api-deployment api=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/api:${{ github.sha }} -n ${{ secrets.GKE_NAMESPACE }}
+
+            kubectl set image deployment/frontend-deployment frontend=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-docker-repo/frontend:${{ github.sha }} -n ${{ secrets.GKE_NAMESPACE }}
+
+
+      # Wait for the deployments to be ready
+      # If the rollout fails, undo the rollout
+      - run: |
+            API_OK=true
+            FRONTEND_OK=true
+
+            kubectl rollout status deployment/api-deployment -n ${{ secrets.GKE_NAMESPACE }} --timeout=120s || API_OK=false
+
+            kubectl rollout status deployment/frontend-deployment -n ${{ secrets.GKE_NAMESPACE }} --timeout=120s || FRONTEND_OK=false
+
+            if ! $API_OK || ! $FRONTEND_OK; then
+                kubectl rollout undo deployment/api-deployment -n ${{ secrets.GKE_NAMESPACE }}
+                
+                kubectl rollout undo deployment/frontend-deployment -n ${{ secrets.GKE_NAMESPACE }}
+
+                exit 1
+            fi
