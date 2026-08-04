@@ -35,7 +35,7 @@ spec: # Deployment specification
       containers:
       - name: redis
         image: redis
-        imagePullPolicy: Never # default
+        imagePullPolicy: IfNotPresent # default
 
         ports:
         - name: http
