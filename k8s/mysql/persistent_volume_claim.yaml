@@ -4,7 +4,7 @@ metadata:
   name: mysql-pv-claim
   namespace: ehr-transcript-consolidation-service
 spec:
-  storageClassName: manual
+  storageClassName: standard-rwo # GKE Autopilot default storage
   accessModes:
     - ReadWriteOnce
   resources:
