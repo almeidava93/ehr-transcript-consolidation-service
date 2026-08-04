@@ -6,9 +6,12 @@ metadata:
   namespace: ehr-transcript-consolidation-service
   labels:
     app: frontend-service
+  annotations:
+    networking.gke.io/load-balancer-ip-addresses: "frontend-ip"
 
 spec:
   type: LoadBalancer 
+  loadBalancerClass: networking.gke.io/l4-regional-external
 
   selector:
     app.kubernetes.io/name: frontend-pod
@@ -17,7 +20,7 @@ spec:
   ports:
     - name: http
       protocol: TCP
-      port: 3000
+      port: 80
       targetPort: http
 
   sessionAffinity: None
