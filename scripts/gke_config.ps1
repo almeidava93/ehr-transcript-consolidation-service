@@ -130,3 +130,40 @@ gcloud compute addresses describe frontend-ip `
    --format="value(address)"
 
 # Use the IP address to create a DNS A record in your domain's DNS settings, pointing to the frontend service.
+
+
+# Setup Google Cloud OpenID Connect (OIDC) for CI/CD witth GitHub Actions
+# Create service account for GitHub Actions
+gcloud iam service-accounts create github-deployer
+
+# Grant the service account the necessary roles for deploying to GKE
+gcloud projects add-iam-policy-binding ehr-transcript-consolidation `
+    --member="serviceAccount:github-deployer@ehr-transcript-consolidation.iam.gserviceaccount.com" `
+    --role="roles/container.developer"
+
+gcloud projects add-iam-policy-binding ehr-transcript-consolidation `
+    --member="serviceAccount:github-deployer@ehr-transcript-consolidation.iam.gserviceaccount.com" `
+    --role="roles/artifactregistry.writer"
+
+# Create a workload identity pool for GitHub Actions
+gcloud iam workload-identity-pools create github-pool --location global
+
+# Create the workload identity provider for GitHub Actions
+gcloud iam workload-identity-pools providers create-oidc github-provider `
+    --location=global `
+    --workload-identity-pool=github-pool `
+    --issuer-uri="https://token.actions.githubusercontent.com" `
+    --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref" `
+    --attribute-condition="attribute.repository=='almeidava93/ehr-transcript-consolidation-service' && attribute.ref=='refs/heads/production'"
+
+# Grant the service account access to the workload identity pool
+# Define variables
+$PROJECT_ID="ehr-transcript-consolidation"
+$PROJECT_NUMBER="440326212883" # Can be obtained with `gcloud projects describe $PROJECT_ID --format="value(projectNumber)"`
+$SERVICE_ACCOUNT="github-deployer"
+$REPO="almeidava93/ehr-transcript-consolidation-service"
+
+gcloud iam service-accounts add-iam-policy-binding `
+    github-deployer@$PROJECT_ID.iam.gserviceaccount.com `
+    --role="roles/iam.workloadIdentityUser" `
+    --member="principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/attribute.repository/$REPO"
