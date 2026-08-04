@@ -9,9 +9,6 @@ permissions:
   contents: read
   id-token: write
 
-env:
-  NAMESPACE: ehr-transcript-consolidation-service
-    
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -23,6 +20,10 @@ jobs:
             service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@v3
+    
+      # Install gke-gcloud-auth-plugin
+      - run: |
+            gcloud components install gke-gcloud-auth-plugin
 
       # Get credenttials to authenticate kubectl
       - run: |
